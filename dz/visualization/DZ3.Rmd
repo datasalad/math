@@ -1,0 +1,101 @@
+---
+title: "Домашнее задание №3"
+author: "datasalad"
+date: "31/07/2017"
+output: 
+  pdf_document: 
+    fig_caption: yes
+    keep_tex: yes
+header-includes:
+- \usepackage[russian]{babel}    
+---
+
+Дано Х и Y (Х общий, а зависимая переменная у каждого подписана). Необходимо построить диаграмму рассеяния (график Y от Х), гистограмму распределения Y.
+Также нужно визуально оценить вид функциональной зависимости и выбрать одну (можно и не одну) из предложенных моделей.
+Для выбранной модели создать столбец расчитанных Y для заданных Х. 
+Найти разницу между заданным Y и расчитанным (ошибку модели), построить график изменения ошибки от Х.
+
+## Загрузка набора данных в R
+
+```{r}
+setwd("~/Desktop/dz/visualization")
+dataset <- read.csv("dz.csv", header = TRUE, stringsAsFactors = FALSE)
+
+str(dataset)
+summary(dataset)
+```
+
+## Диаграмма рассеяния (график Y от Х) 
+
+```{r message=FALSE, warning=FALSE}
+library(ggplot2)
+
+plot <- ggplot(dataset, aes(x = X, y = Y))
+plot + geom_point() + ggtitle("XY scatterplot")
+
+```
+
+
+## Гистограмма распределения Y
+
+```{r message=FALSE, warning=FALSE}
+qplot(Y, data = dataset, geom = "histogram", bins = 100, main = "Y histogram")
+
+```
+
+## Выбор модели
+
+*  y = 40,5*x-2,5 
+*  y = 0,5*x+10    
+*  y = 405,5*x-413 
+*  y = 10,11*x^0,08  
+*  y = 103*e^(0,5*x)  
+*  y = -0,0015*x+0,0076  
+*  y = 0,01*e^(-0,5*x)  
+*  y = 58*x^2-206*x+262  
+*  y = -5*x^2+30*x-37  
+
+Расположение точек на диаграмме рассеивания напоминает параболу, уходящую ветвями вниз, поэтому выберем последнюю модель:
+ **y = -5*x^2+30*x-37**
+
+ 
+Для выбранной модели создаем столбец расчитанных Y для заданных Х. 
+
+```{r echo=TRUE}
+f9 <- function(x) { -5 * x^2 + 30 * x - 37 }
+```
+
+```{r message=FALSE, warning=FALSE}
+library(dplyr)
+
+data <- tbl_df(dataset)
+data <- mutate(data, y9 = f9(X))
+```
+
+```{r warning=FALSE}
+head(data)
+summary(data)
+
+qplot(x = X, y = Y, data = data)  + geom_line(mapping = aes(x = X, y = y9), col = "red") 
+
+```
+
+## Найти разницу между заданным Y и расчитанным (ошибку модели), построить график изменения ошибки от Х.
+
+```{r echo=FALSE}
+options(scipen=999)
+```
+
+
+```{r message=FALSE, warning=FALSE}
+## Ошибка модели
+data <- mutate(data, diff = y9-Y)
+summary(data$diff)
+
+## График изменения ошибки от Х
+
+qplot(X, diff, data = data, main = "Model error by X") + geom_line()
+
+```
+
+
